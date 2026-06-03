@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wochenplan-Konfigurator v10 (Optimierte Reihenfolge)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f2ede4;
+            color: #4a4540;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Layout */
+        .config-sidebar {
+            width: 480px;
+            background-color: #ffffff;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+            padding: 25px 20px;
+            overflow-y: auto;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+        .config-sidebar h2 {
+            font-size: 20px;
+            color: #8c8275;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f4f1ea;
+            padding-bottom: 10px;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #5c544c;
+            background: #f4f1ea;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #706960;
+        }
+        input[type="text"], input[type="date"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #4a4540;
+            background-color: #fafafa;
+        }
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+            border-color: #bcaf9e;
+            outline: none;
+            background-color: #fff;
+        }
+        
+        /* Dynamic Subject Matrix Cards */
+        .subject-card {
+            background-color: #fbfbfa;
+            border: 1px solid #e6e2da;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .subject-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .btn-remove-subject {
+            background: #e0acac;
+            color: #722222;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-remove-subject:hover {
+            background: #d09696;
+        }
+        .btn-add-subject {
+            display: inline-block;
+            background-color: #bcaf9e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+        .btn-add-subject:hover {
+            background-color: #a39684;
+        }
+
+        .einheiten-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .einheiten-table th, .einheiten-table td {
+            padding: 5px;
+            font-size: 12px;
+            border: 1px solid #e1ded8;
+        }
+        .einheiten-table th {
+            background-color: #f4f1ea;
+            color: #706960;
+            text-align: left;
+        }
+        .einheiten-table input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 4px;
+            font-size: 12px;
+        }
+        .einheiten-table input:focus {
+            outline: 1px solid #bcaf9e;
+            background: #fff;
+        }
+        
+        .day-config {
+            background-color: #faf9f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f0ede6;
+        }
+        .day-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: #8c8275;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e6e2da;
+            padding-bottom: 4px;
+        }
+        .stunden-liste {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .stunde-input-group {
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #eae6df;
+        }
+        .stunde-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .stunde-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #a0988e;
+        }
+        .row-select-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #706960;
+        }
+        .zeilen-select {
+            width: 50px;
+            padding: 2px 4px;
+            font-size: 11px;
+        }
+
+        .btn-print {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #8c8275;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background-color 0.2s;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-print:hover {
+            background-color: #70675c;
+        }
+
+        /* Preview Area Container */
+        .preview-container {
+            margin-left: 480px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 40px;
+            overflow-y: auto;
+        }
+        
+        .week-bundle-separator {
+            border: 2px dashed #b0a69a;
+            width: 100%;
+            max-width: 794px;
+            margin: 10px 0;
+            text-align: center;
+            position: relative;
+        }
+        .week-bundle-separator::after {
+            content: "NÄCHSTE PLANUNGSWOCHE";
+            background: #f2ede4;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #8c8275;
+            position: relative;
+            top: -10px;
+        }
+
+        .appendix-separator {
+            border: 3px double #8c8275;
+            width: 100%;
+            max-width: 794px;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+        }
+        .appendix-separator::after {
+            content: "ANHANG: ÜBERSICHT DER STOFFVERTEILUNG";
+            background: #f2ede4;
+            padding: 0 15px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #5c544c;
+            letter-spacing: 1px;
+            position: relative;
+            top: -11px;
+        }
+        
+        /* EXACT A4 REPRESENTATION */
+        .a4-page {
+            width: 794px;
+            height: 1123px;
+            background-color: #ffffff;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.08);
+            position: relative;
+            box-sizing: border-box;
+            padding: 55px 50px;
+            overflow: hidden;
+        }
+        
+        .page-1-bg {
+            background-image: url('Hintergrund jahreszeiten.jpg');
+        }
+        
+        .page-2-bg {
+            background-image: url('Hintergrund folgeseiten.jpg');
+        }
+
+        /* Appendix / Stoffverteilungsplan design styling */
+        .appendix-title-box {
+            margin-top: 50px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #8c8275;
+            padding-bottom: 10px;
+        }
+        .appendix-title-box h1 {
+            font-size: 22px;
+            color: #5c544c;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .appendix-title-box p {
+            font-size: 13px;
+            color: #8c8275;
+            margin: 5px 0 0 0;
+            font-style: italic;
+        }
+
+        .master-plan-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .master-plan-table th, .master-plan-table td {
+            border: 1px solid #dcd7cd;
+            padding: 10px 12px;
+            font-size: 13px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .master-plan-table th {
+            background-color: #f4f1ea;
+            color: #4a4540;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        .master-plan-table tr:nth-child(even) {
+            background-color: #faf9f6;
+        }
+        .master-plan-table .week-cell {
+            font-weight: bold;
+            color: #8c8275;
+            width: 15%;
+            white-space: nowrap;
+        }
+        .master-plan-table .subject-tag {
+            display: inline-block;
+            font-weight: bold;
+            font-size: 11px;
+            color: #8c8275;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            border-bottom: 1px solid #bcaf9e;
+        }
+        .master-plan-table .content-cell {
+            line-height: 1.4;
+            color: #4a4540;
+        }
+
+        /* Header Style */
+        .header-section {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 40px;
+            margin-bottom: 45px;
+            height: 110px;
+        }
+        
+        .date-container-box {
+            margin-top: 50px;
+        }
+        
+        .date-display {
+            font-size: 16px;
+            letter-spacing: 3px;
+            color: #8c8275;
+            font-weight: bold;
+            padding-left: 5px;
+        }
+        
+        .wichtig-box-content-only {
+            width: 250px;
+            margin-top: -4px; 
+            margin-left: 38px; 
+            padding: 10px 5px;
+        }
+        .wichtig-content {
+            font-size: 13px;
+            line-height: 1.4;
+            color: #4a4540;
+            white-space: pre-wrap;
+            min-height: 45px;
+        }
+
+        /* Schedule Layout */
+        .schedule-grid {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 25px; 
+            margin-top: 15px;
+        }
+        
+        .page-2-spacer {
+            height: 120px;
+        }
+        
+        .day-row {
+            display: flex;
+            align-items: stretch;
+            border-bottom: 2px solid rgba(230, 223, 213, 0.7);
+            padding-bottom: 15px;
+        }
+        .day-row:last-child {
+            border-bottom: none;
+        }
+        
+        .lessons-column {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px; 
+        }
+        
+        .subject-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px; 
+        }
+
+        .lesson-line {
+            display: flex;
+            align-items: flex-end;
+            height: 24px;
+        }
+        .lesson-num {
+            width: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #a3998e;
+            display: flex;
+            align-items: center;
+        }
+        .lesson-text {
+            flex-grow: 1;
+            border-bottom: 1px dotted #b0a89f;
+            font-size: 16px;
+            color: #4a4540;
+            padding-left: 8px;
+            padding-bottom: 2px;
+            min-height: 22px;
+        }
+        
+        .lesson-topic-subtitle {
+            font-size: 11px;
+            font-style: italic;
+            color: #8c7e6e;
+            margin-top: -3px;
+            padding-left: 33px;
+            line-height: 1.2;
+        }
+        
+        .day-label-column {
+            width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-rl;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 4px;
+            font-weight: bold;
+            color: #8c8275;
+            border-left: 1px solid rgba(235, 217, 200, 0.8);
+            margin-left: 20px;
+            padding-right: 5px;
+        }
+
+        /* Print Override Styles */
+        @media print {
+            body {
+                background-color: #ffffff;
+            }
+            .config-sidebar, .week-bundle-separator, .appendix-separator {
+                display: none !important;
+            }
+            .preview-container {
+                margin-left: 0 !important;
+                padding: 0 !important;
+                gap: 0 !important;
+            }
+            .a4-page {
+                box-shadow: none !important;
+                width: 794px !important; 
+                height: 1123px !important;
+                page-break-after: always !important;
+            }
+            .page-1-bg {
+                background-image: url('Hintergrund jahreszeiten.jpg') !important;
+            }
+            .page-2-bg {
+                background-image: url('Hintergrund folgeseiten.jpg') !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR CONFIGURATOR FORM -->
+    <div class="config-sidebar">
+        <h2>Wochenplan-Konfigurator</h2>
+        
+        <!-- AUTOMATIC DATE DISTRIBUTION SECTION -->
+        <div style="background: #fdfaf4; padding: 12px; border: 1px dashed #bcaf9e; border-radius: 6px; margin-bottom: 15px;">
+            <div class="form-group">
+                <label for="startDate">Start-Montag auswählen:</label>
+                <input type="date" id="startDate" onchange="updatePreview()">
+            </div>
+            
+            <div class="form-group">
+                <label for="weekCount">Wie viele Wochen drucken?</label>
+                <input type="number" id="weekCount" value="6" min="1" max="12" oninput="handleWeekCountChange()">
+            </div>
+        </div>
+
+        <!-- NEW ORDER: GENERAL BASE SCHEDULE DIRECTLY AT THE TOP -->
+        <div class="section-title">Allgemeiner Basis-Stundenplan</div>
+        
+        <div class="form-group">
+            <label for="inputWichtig">DIESE WOCHE WICHTIG...</label>
+            <textarea id="inputWichtig" oninput="updatePreview()">Kopiergeld mitbringen!&#10;Sportzeug nicht vergessen.</textarea>
+        </div>
+
+        <!-- Days fields generated here now -->
+        <div id="daysFormContainer"></div>
+
+        <!-- NEW ORDER: LONG-TERM PLANNING PUSHED TO THE BOTTOM -->
+        <div class="section-title">Themen-Verteilung der Fächer (Einheit planen)</div>
+        <p style="font-size: 12px; color: #8c8275; margin-top: -8px; margin-bottom: 12px; font-style: italic;">
+            Optional: Trag hier deine Reihenfolgen ein. Sie werden automatisch in passende Stunden eingefügt.
+        </p>
+        <div id="subjectsContainer"></div>
+        <button class="btn-add-subject" onclick="addNewSubjectCard()">+ Weiteres Fach hinzufügen</button>
+        
+        <div style="border-top: 2px solid #f4f1ea; margin-top: 20px; padding-top: 5px;">
+            <button class="btn-print" onclick="window.print()">Komplettes Paket drucken (PDF)</button>
+        </div>
+    </div>
+
+    <!-- LIVE PREVIEW AREA -->
+    <div class="preview-container" id="pagesPreviewArea"></div>
+
+    <script>
+        const days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"];
+        
+        const defaultData = {
+            "Montag": ["Ankommen", "Deutsch", "Mathe", "Sachunterricht", "Sport", ""],
+            "Dienstag": ["Deutsch", "Lernzeit", "Chatterbox", "", "Planungsstunde", ""],
+            "Mittwoch": ["Deutsch", "Musik", "Klassenrat", "Mittag", "", ""],
+            "Donnerstag": ["Deutsch", "", "Lernzeit", "Sachunterricht", "", "Mobi"],
+            "Freitag": ["Deutsch", "Musik", "Klassenrat", "Mittag", "", ""]
+        };
+
+        let preloadedSubjects = [
+            {
+                name: "Sachunterricht",
+                topics: [
+                    "Milchgebiss & bleibende Zähne",
+                    "Der Aufbau eines Zahnes",
+                    "Zahngesunde vs. zahnkranke Ernährung",
+                    "Die richtige Zahnputztechnik (KAI)",
+                    "Der Besuch beim Zahnarzt",
+                    "Zusammenfassung & Forscherheft Abschluss"
+                ]
+            },
+            {
+                name: "Deutsch",
+                topics: [
+                    "Schreibschrift-Einführung: Buchstabe Mm",
+                    "Leseübungen zu Silbenbögen",
+                    "Gedichtwerkstatt: Frühlingsreime",
+                    "Wortarten sortieren (Nomen)",
+                    "Satzanfänge groß schreiben",
+                    "Kleine Lesekontrolle & Buchvorstellung"
+                ]
+            }
+        ];
+
+        let subjectIds = [];
+        let subjectCounter = 0;
+
+        function setInitialMonday() {
+            let d = new Date();
+            let day = d.getDay(),
+                diff = d.getDate() - day + (day == 0 ? -6:1);
+            let monday = new Date(d.setDate(diff));
+            
+            let yyyy = monday.getFullYear();
+            let mm = String(monday.getMonth() + 1).padStart(2, '0');
+            let dd = String(monday.getDate()).padStart(2, '0');
+            
+            document.getElementById('startDate').value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        function addNewSubjectCard(name = "", topicsArray = []) {
+            subjectCounter++;
+            let id = subjectCounter;
+            subjectIds.push(id);
+            
+            let totalWeeks = parseInt(document.getElementById('weekCount').value) || 6;
+            
+            let card = document.createElement('div');
+            card.className = 'subject-card';
+            card.id = `subject-card-${id}`;
+            
+            let html = `
+                <div class="subject-card-header">
+                    <input type="text" id="sub-name-${id}" value="${name}" placeholder="z.B. Mathe" oninput="updatePreview()" style="font-weight:bold; width:70%; padding:4px 8px; font-size:13px;">
+                    <button class="btn-remove-subject" onclick="removeSubjectCard(${id})">Löschen</button>
+                </div>
+                <table class="einheiten-table">
+                    <thead>
+                        <tr>
+                            <th style="width:25%; font-size:11px;">Woche</th>
+                            <th style="font-size:11px;">Thema</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sub-tbody-${id}">
+            `;
+            
+            for(let w = 1; w <= totalWeeks; w++) {
+                let defaultVal = topicsArray[w-1] || "";
+                html += `
+                    <tr>
+                        <td style="color:#8c8275; font-weight:bold; font-size:11px; text-align:center; padding:3px;">W ${w}</td>
+                        <td style="padding:2px;"><input type="text" id="sub-topic-${id}-w-${w}" value="${defaultVal}" oninput="updatePreview()" style="font-size:11px; padding:2px 4px;"></td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            card.innerHTML = html;
+            document.getElementById('subjectsContainer').appendChild(card);
+            updatePreview();
+        }
+
+        function removeSubjectCard(id) {
+            let el = document.getElementById(`subject-card-${id}`);
+            if(el) el.remove();
+            subjectIds = subjectIds.filter(item => item !== id);
+            updatePreview();
+        }
+
+        function handleWeekCountChange() {
+            let totalWeeks = parseInt(document.getElementById('weekCount').value) || 1;
+            
+            subjectIds.forEach(id => {
+                let tbody = document.getElementById(`sub-tbody-${id}`);
+                if(!tbody) return;
+                
+                let currentRows = tbody.children.length;
+                if(currentRows < totalWeeks) {
+                    for(let w = currentRows + 1; w <= totalWeeks; w++) {
+                        let tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="color:#8c8275; font-weight:bold; font-size:11px; text-align:center; padding:3px;">W ${w}</td>
+                            <td style="padding:2px;"><input type="text" id="sub-topic-${id}-w-${w}" value="" oninput="updatePreview()" style="font-size:11px; padding:2px 4px;"></td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                } else if(currentRows > totalWeeks) {
+                    while(tbody.children.length > totalWeeks) {
+                        tbody.lastChild.remove();
+                    }
+                }
+            });
+            updatePreview();
+        }
+
+        function guessLinesCount(subjectName) {
+            if (!subjectName) return 1;
+            const name = subjectName.toLowerCase();
+            if (name.includes("deutsch")) return 3;
+            if (name.includes("sach")) return 2;
+            if (name.includes("mittag")) return 1;
+            if (name.includes("lernzeit")) return 2;
+            return 1;
+        }
+
+        // Render Base Structure Fields
+        const formContainer = document.getElementById('daysFormContainer');
+        days.forEach(day => {
+            let dayBox = document.createElement('div');
+            dayBox.className = 'day-config';
+            dayBox.innerHTML = `<div class="day-title">${day}</div>`;
+            
+            let stundenListe = document.createElement('div');
+            stundenListe.className = 'stunden-liste';
+            
+            for(let i = 1; i <= 6; i++) {
+                let val = defaultData[day][i-1] || "";
+                let initialLines = guessLinesCount(val);
+                
+                let stundeGroup = document.createElement('div');
+                stundeGroup.className = 'stunde-input-group';
+                stundeGroup.innerHTML = `
+                    <div class="stunde-header">
+                        <span class="stunde-label">Stunde ${i}</span>
+                        <div class="row-select-container">
+                            <span>Zeilen:</span>
+                            <select id="lines-${day}-${i}" class="zeilen-select" onchange="updatePreview()">
+                                <option value="1" ${initialLines===1?'selected':''}>1</option>
+                                <option value="2" ${initialLines===2?'selected':''}>2</option>
+                                <option value="3" ${initialLines===3?'selected':''}>3</option>
+                                <option value="4" ${initialLines===4?'selected':''}>4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <input type="text" id="input-${day}-${i}" value="${val}" oninput="handleInputChange('${day}', ${i})">
+                `;
+                stundenListe.appendChild(stundeGroup);
+            }
+            dayBox.appendChild(stundenListe);
+            formContainer.appendChild(dayBox);
+        });
+
+        function handleInputChange(day, hour) {
+            let inputVal = document.getElementById(`input-${day}-${hour}`).value;
+            let select = document.getElementById(`lines-${day}-${hour}`);
+            
+            if(inputVal.toLowerCase().includes("deutsch")) { select.value = 3; }
+            else if(inputVal.toLowerCase().includes("sach")) { select.value = 2; }
+            else if(inputVal.toLowerCase().includes("mittag")) { select.value = 1; }
+            else if(inputVal.toLowerCase().includes("lernzeit")) { select.value = 2; }
+            
+            updatePreview();
+        }
+
+        function calculateWeekRangeStr(baseMondayDate, weeksOffset) {
+            let targetMonday = new Date(baseMondayDate.getTime());
+            targetMonday.setDate(targetMonday.getDate() + (weeksOffset * 7));
+            
+            let targetFreitag = new Date(targetMonday.getTime());
+            targetFreitag.setDate(targetFreitag.getDate() + 4);
+            
+            let pad = (num) => String(num).padStart(2, '0');
+            return `${pad(targetMonday.getDate())}.${pad(targetMonday.getMonth() + 1)} - ${pad(targetFreitag.getDate())}.${pad(targetFreitag.getMonth() + 1)}`;
+        }
+
+        function createDayDomElement(day, weekIndex) {
+            let validDayContent = false;
+            let lessonsCol = document.createElement('div');
+            lessonsCol.className = 'lessons-column';
+            
+            let activeRules = [];
+            subjectIds.forEach(id => {
+                let sName = document.getElementById(`sub-name-${id}`).value.trim().toLowerCase();
+                let tInput = document.getElementById(`sub-topic-${id}-w-${weekIndex + 1}`);
+                let sTopic = tInput ? tInput.value.trim() : "";
+                if(sName && sTopic) {
+                    activeRules.push({ nameKey: sName, topicText: sTopic });
+                }
+            });
+            
+            for(let i = 1; i <= 6; i++) {
+                let val = document.getElementById(`input-${day}-${i}`).value;
+                let numLines = parseInt(document.getElementById(`lines-${day}-${i}`).value);
+                
+                if (val && val.trim() !== "") {
+                    validDayContent = true;
+                    let subjectContainer = document.createElement('div');
+                    subjectContainer.className = 'subject-container';
+                    
+                    for(let lineIdx = 0; lineIdx < numLines; lineIdx++) {
+                        let line = document.createElement('div');
+                        line.className = 'lesson-line';
+                        let numberDisplay = (lineIdx === 0) ? i : "";
+                        let textDisplay = (lineIdx === 0) ? val : "";
+                        
+                        line.innerHTML = `
+                            <span class="lesson-num">${numberDisplay}</span>
+                            <span class="lesson-text">${textDisplay}</span>
+                        `;
+                        subjectContainer.appendChild(line);
+                    }
+                    
+                    activeRules.forEach(rule => {
+                        if(val.toLowerCase().includes(rule.nameKey)) {
+                            let topicSub = document.createElement('div');
+                            topicSub.className = 'lesson-topic-subtitle';
+                            topicSub.innerHTML = `↳ ${rule.topicText}`;
+                            subjectContainer.appendChild(topicSub);
+                        }
+                    });
+                    
+                    lessonsCol.appendChild(subjectContainer);
+                }
+            }
+            
+            if(validDayContent) {
+                let row = document.createElement('div');
+                row.className = 'day-row';
+                row.appendChild(lessonsCol);
+                
+                let labelCol = document.createElement('div');
+                labelCol.className = 'day-label-column';
+                labelCol.innerText = day;
+                row.appendChild(labelCol);
+                return row;
+            }
+            return null;
+        }
+
+        function updatePreview() {
+            const container = document.getElementById('pagesPreviewArea');
+            container.innerHTML = '';
+            
+            const startSrcVal = document.getElementById('startDate').value;
+            if(!startSrcVal) return;
+            
+            const parts = startSrcVal.split('-');
+            const baseMondayDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            
+            const totalWeeks = parseInt(document.getElementById('weekCount').value) || 1;
+            const wichtigValue = document.getElementById('inputWichtig').value;
+            
+            // 1. WEEK PAGES
+            for(let w = 0; w < totalWeeks; w++) {
+                if(w > 0) {
+                    let sep = document.createElement('div');
+                    sep.className = 'week-bundle-separator';
+                    container.appendChild(sep);
+                }
+                
+                let currentWeekDays = [];
+                days.forEach(day => {
+                    let dom = createDayDomElement(day, w);
+                    if(dom) currentWeekDays.push(dom);
+                });
+                
+                if(currentWeekDays.length === 0) continue;
+                
+                // PAGE 1
+                let calculatedDateStr = calculateWeekRangeStr(baseMondayDate, w);
+                let page1 = document.createElement('div');
+                page1.className = 'a4-page page-1-bg';
+                
+                let header = document.createElement('div');
+                header.className = 'header-section';
+                header.innerHTML = `
+                    <div class="date-container-box">
+                        <div class="date-display">${calculatedDateStr}</div>
+                    </div>
+                    <div class="wichtig-box-content-only">
+                        <div class="wichtig-content">${wichtigValue}</div>
+                    </div>
+                `;
+                page1.appendChild(header);
+                
+                let grid1 = document.createElement('div');
+                grid1.className = 'schedule-grid';
+                
+                let daysOnPage1 = Math.min(2, currentWeekDays.length);
+                for(let i=0; i<daysOnPage1; i++) {
+                    grid1.appendChild(currentWeekDays[i]);
+                }
+                page1.appendChild(grid1);
+                container.appendChild(page1);
+                
+                // PAGE 2
+                if(currentWeekDays.length > 2) {
+                    let page2 = document.createElement('div');
+                    page2.className = 'a4-page page-2-bg';
+                    
+                    let spacer = document.createElement('div');
+                    spacer.className = 'page-2-spacer';
+                    page2.appendChild(spacer);
+                    
+                    let grid2 = document.createElement('div');
+                    grid2.className = 'schedule-grid';
+                    
+                    for(let i=2; i<currentWeekDays.length; i++) {
+                        grid2.appendChild(currentWeekDays[i]);
+                    }
+                    page2.appendChild(grid2);
+                    container.appendChild(page2);
+                }
+            }
+            
+            // 2. APPENDIX / STOFFVERTEILUNGSPLAN PAGE (ONLY RENDERS IF AT LEAST ONE ACTIVE RULE EXISTS)
+            let hasActiveRules = false;
+            subjectIds.forEach(id => {
+                let sName = document.getElementById(`sub-name-${id}`).value.trim();
+                if(sName) hasActiveRules = true;
+            });
+            
+            if (hasActiveRules) {
+                let appendixSep = document.createElement('div');
+                appendixSep.className = 'appendix-separator';
+                container.appendChild(appendixSep);
+                
+                let appendixPage = document.createElement('div');
+                appendixPage.className = 'a4-page page-2-bg';
+                
+                let appSpacer = document.createElement('div');
+                appSpacer.className = 'page-2-spacer';
+                appendixPage.appendChild(appSpacer);
+                
+                let titleBox = document.createElement('div');
+                titleBox.className = 'appendix-title-box';
+                titleBox.innerHTML = `
+                    <h1>Stoffverteilungsplan / Reihenübersicht</h1>
+                    <p>Übersicht der parallel laufenden Unterrichtseinheiten über den gesamten Planungszeitraum</p>
+                `;
+                appendixPage.appendChild(titleBox);
+                
+                let table = document.createElement('table');
+                table.className = 'master-plan-table';
+                
+                let thead = document.createElement('thead');
+                let headerTr = document.createElement('tr');
+                headerTr.innerHTML = `
+                    <th>Zeitraum</th>
+                    <th>Geplante Unterrichtsinhalte / Reihenfortschritt</th>
+                `;
+                thead.appendChild(headerTr);
+                table.appendChild(thead);
+                
+                let tbody = document.createElement('tbody');
+                
+                for(let w = 0; w < totalWeeks; w++) {
+                    let rangeStr = calculateWeekRangeStr(baseMondayDate, w);
+                    let tr = document.createElement('tr');
+                    
+                    let cellWeek = document.createElement('td');
+                    cellWeek.className = 'week-cell';
+                    cellWeek.innerHTML = `Woche ${w+1}<br><span style="font-size:11px; font-weight:normal; color:#a0958a;">(${rangeStr})</span>`;
+                    tr.appendChild(cellWeek);
+                    
+                    let cellContent = document.createElement('td');
+                    cellContent.className = 'content-cell';
+                    
+                    let contentHTML = "";
+                    subjectIds.forEach(id => {
+                        let sName = document.getElementById(`sub-name-${id}`).value.trim();
+                        let tInput = document.getElementById(`sub-topic-${id}-w-${w + 1}`);
+                        let sTopic = tInput ? tInput.value.trim() : "";
+                        
+                        if(sName && sTopic) {
+                            contentHTML += `
+                                <div style="margin-bottom: 8px;">
+                                    <span class="subject-tag">${sName}</span><br>
+                                    <span>${sTopic}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    if(!contentHTML) {
+                        contentHTML = `<span style="color:#b5b0a8; font-style:italic;">Keine Einheitsplanungen für diese Woche hinterlegt.</span>`;
+                    }
+                    
+                    cellContent.innerHTML = contentHTML;
+                    tr.appendChild(cellContent);
+                    tbody.appendChild(tr);
+                }
+                
+                table.appendChild(tbody);
+                appendixPage.appendChild(table);
+                container.appendChild(appendixPage);
+            }
+        }
+
+        // Initialization
+        setInitialMonday();
+        
+        preloadedSubjects.forEach(sub => {
+            addNewSubjectCard(sub.name, sub.topics);
+        });
+    </script>
+</body>
+</html>
