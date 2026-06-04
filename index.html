@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wochenplan-Konfigurator v10 (Optimierte Reihenfolge)</title>
+    <title>Wochenplan-Konfigurator v10 (Final)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -14,10 +14,14 @@
             margin: 0;
             padding: 0;
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f2ede4;
+            background-image: url('3a.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
             color: #4a4540;
             display: flex;
             min-height: 100vh;
+            transition: background-image 0.3s ease;
         }
         
         /* Sidebar Layout */
@@ -231,6 +235,7 @@
             gap: 40px;
             padding: 40px;
             overflow-y: auto;
+            margin-top: 50px;
         }
         
         .week-bundle-separator {
@@ -285,14 +290,7 @@
             box-sizing: border-box;
             padding: 55px 50px;
             overflow: hidden;
-        }
-        
-        .page-1-bg {
-            background-image: url('Hintergrund jahreszeiten.jpg');
-        }
-        
-        .page-2-bg {
-            background-image: url('Hintergrund folgeseiten.jpg');
+            margin-bottom: 20px;
         }
 
         /* Appendix / Stoffverteilungsplan design styling */
@@ -486,26 +484,23 @@
         @media print {
             body {
                 background-color: #ffffff;
+                background-image: none !important;
             }
-            .config-sidebar, .week-bundle-separator, .appendix-separator {
+            #design-switcher, .config-sidebar, .week-bundle-separator, .appendix-separator {
                 display: none !important;
             }
             .preview-container {
                 margin-left: 0 !important;
                 padding: 0 !important;
                 gap: 0 !important;
+                margin-top: 0 !important;
             }
             .a4-page {
                 box-shadow: none !important;
                 width: 794px !important; 
                 height: 1123px !important;
                 page-break-after: always !important;
-            }
-            .page-1-bg {
-                background-image: url('Hintergrund jahreszeiten.jpg') !important;
-            }
-            .page-2-bg {
-                background-image: url('Hintergrund folgeseiten.jpg') !important;
+                margin-bottom: 0 !important;
             }
             @page {
                 size: A4 portrait;
@@ -516,11 +511,17 @@
 </head>
 <body>
 
-    <!-- SIDEBAR CONFIGURATOR FORM -->
+    <div id="design-switcher" style="position: fixed; top: 0; left: 480px; right: 0; background: rgba(255, 255, 255, 0.95); padding: 12px; text-align: center; border-bottom: 1px solid #e6e2da; font-family: sans-serif; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <span style="margin-right: 15px; font-weight: bold; color: #5c544c; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Vorschau-Hintergrund wählen:</span>
+        <button onclick="changeBackground('3a.jpg', '3b.jpg')" style="margin: 0 5px; padding: 6px 12px; cursor: pointer; border: 1px solid #bcaf9e; background: #fff; color: #4a4540; border-radius: 4px; font-weight: bold; font-size: 12px;">Jahreszeiten</button>
+        <button onclick="changeBackground('1a.jpg', '1b.jpg')" style="margin: 0 5px; padding: 6px 12px; cursor: pointer; border: 1px solid #bcaf9e; background: #fff; color: #4a4540; border-radius: 4px; font-weight: bold; font-size: 12px;">Aquarell</button>
+        <button onclick="changeBackground('2a.jpg', '2b.jpg')" style="margin: 0 5px; padding: 6px 12px; cursor: pointer; border: 1px solid #bcaf9e; background: #fff; color: #4a4540; border-radius: 4px; font-weight: bold; font-size: 12px;">Eukalyptus</button>
+        <button onclick="changeBackground('4a.jpg', '4b.jpg')" style="margin: 0 5px; padding: 6px 12px; cursor: pointer; border: 1px solid #bcaf9e; background: #fff; color: #4a4540; border-radius: 4px; font-weight: bold; font-size: 12px;">Ohne Hintergrund</button>
+    </div>
+
     <div class="config-sidebar">
         <h2>Wochenplan-Konfigurator</h2>
         
-        <!-- AUTOMATIC DATE DISTRIBUTION SECTION -->
         <div style="background: #fdfaf4; padding: 12px; border: 1px dashed #bcaf9e; border-radius: 6px; margin-bottom: 15px;">
             <div class="form-group">
                 <label for="startDate">Start-Montag auswählen:</label>
@@ -533,7 +534,6 @@
             </div>
         </div>
 
-        <!-- NEW ORDER: GENERAL BASE SCHEDULE DIRECTLY AT THE TOP -->
         <div class="section-title">Allgemeiner Basis-Stundenplan</div>
         
         <div class="form-group">
@@ -541,10 +541,8 @@
             <textarea id="inputWichtig" oninput="updatePreview()">Kopiergeld mitbringen!&#10;Sportzeug nicht vergessen.</textarea>
         </div>
 
-        <!-- Days fields generated here now -->
         <div id="daysFormContainer"></div>
 
-        <!-- NEW ORDER: LONG-TERM PLANNING PUSHED TO THE BOTTOM -->
         <div class="section-title">Themen-Verteilung der Fächer (Einheit planen)</div>
         <p style="font-size: 12px; color: #8c8275; margin-top: -8px; margin-bottom: 12px; font-style: italic;">
             Optional: Trag hier deine Reihenfolgen ein. Sie werden automatisch in passende Stunden eingefügt.
@@ -557,7 +555,6 @@
         </div>
     </div>
 
-    <!-- LIVE PREVIEW AREA -->
     <div class="preview-container" id="pagesPreviewArea"></div>
 
     <script>
@@ -576,7 +573,7 @@
                 name: "Sachunterricht",
                 topics: [
                     "Milchgebiss & bleibende Zähne",
-                    "Der Aufbau eines Zahnes",
+                    "Der Aufbau eines Zahnaches",
                     "Zahngesunde vs. zahnkranke Ernährung",
                     "Die richtige Zahnputztechnik (KAI)",
                     "Der Besuch beim Zahnarzt",
@@ -598,6 +595,8 @@
 
         let subjectIds = [];
         let subjectCounter = 0;
+        let currentBgA = '3a.jpg';
+        let currentBgB = '3b.jpg';
 
         function setInitialMonday() {
             let d = new Date();
@@ -701,7 +700,6 @@
             return 1;
         }
 
-        // Render Base Structure Fields
         const formContainer = document.getElementById('daysFormContainer');
         days.forEach(day => {
             let dayBox = document.createElement('div');
@@ -838,7 +836,6 @@
             const totalWeeks = parseInt(document.getElementById('weekCount').value) || 1;
             const wichtigValue = document.getElementById('inputWichtig').value;
             
-            // 1. WEEK PAGES
             for(let w = 0; w < totalWeeks; w++) {
                 if(w > 0) {
                     let sep = document.createElement('div');
@@ -854,10 +851,11 @@
                 
                 if(currentWeekDays.length === 0) continue;
                 
-                // PAGE 1
                 let calculatedDateStr = calculateWeekRangeStr(baseMondayDate, w);
+                
                 let page1 = document.createElement('div');
-                page1.className = 'a4-page page-1-bg';
+                page1.className = 'a4-page';
+                page1.style.backgroundImage = `url('${currentBgA}')`;
                 
                 let header = document.createElement('div');
                 header.className = 'header-section';
@@ -881,10 +879,10 @@
                 page1.appendChild(grid1);
                 container.appendChild(page1);
                 
-                // PAGE 2
                 if(currentWeekDays.length > 2) {
                     let page2 = document.createElement('div');
-                    page2.className = 'a4-page page-2-bg';
+                    page2.className = 'a4-page';
+                    page2.style.backgroundImage = `url('${currentBgB}')`;
                     
                     let spacer = document.createElement('div');
                     spacer.className = 'page-2-spacer';
@@ -901,7 +899,6 @@
                 }
             }
             
-            // 2. APPENDIX / STOFFVERTEILUNGSPLAN PAGE (ONLY RENDERS IF AT LEAST ONE ACTIVE RULE EXISTS)
             let hasActiveRules = false;
             subjectIds.forEach(id => {
                 let sName = document.getElementById(`sub-name-${id}`).value.trim();
@@ -914,7 +911,8 @@
                 container.appendChild(appendixSep);
                 
                 let appendixPage = document.createElement('div');
-                appendixPage.className = 'a4-page page-2-bg';
+                appendixPage.className = 'a4-page';
+                appendixPage.style.backgroundImage = `url('${currentBgB}')`;
                 
                 let appSpacer = document.createElement('div');
                 appSpacer.className = 'page-2-spacer';
@@ -985,9 +983,14 @@
             }
         }
 
-        // Initialization
+        function changeBackground(bgA, bgB) {
+            currentBgA = bgA;
+            currentBgB = bgB;
+            document.body.style.backgroundImage = "url('" + bgA + "')";
+            updatePreview();
+        }
+
         setInitialMonday();
-        
         preloadedSubjects.forEach(sub => {
             addNewSubjectCard(sub.name, sub.topics);
         });
